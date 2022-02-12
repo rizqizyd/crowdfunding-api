@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"api/auth"
 	"api/helper"
 	"api/user"
 	"fmt"
@@ -9,13 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// field disini dibuat supaya setiap service dapat dipakai di dalam userHandler
 type userHandler struct {
 	userService user.Service
+	authService auth.Service
 }
 
-// userService akan di passing menjadi userServiec yang ada di struct
-func NewUserHandler(userService user.Service) *userHandler {
-	return &userHandler{userService}
+// userService akan di passing menjadi userService yang ada di struct
+func NewUserHandler(userService user.Service, authService auth.Service) *userHandler {
+	return &userHandler{userService, authService}
 }
 
 // user handler register
@@ -51,8 +54,16 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
+	// panggil authService
+	token, err := h.authService.GenerateToken(newUser.ID)
+	if err != nil {
+		response := helper.APIResponse("Register account failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// memanggil formatter
-	formatter := user.FormatUser(newUser, "tokentokentoken")
+	formatter := user.FormatUser(newUser, token)
 
 	// memanggil response pada helper
 	response := helper.APIResponse("Account has been registered", http.StatusOK, "success", formatter)
@@ -98,8 +109,16 @@ func (h *userHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// panggil authService
+	token, err := h.authService.GenerateToken(loggedinUser.ID)
+	if err != nil {
+		response := helper.APIResponse("Login failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// memanggil formatter. balikkan loggedinUser ke dalam format json. user di format dalam bentuk user formatter
-	formatter := user.FormatUser(loggedinUser, "tokentokentoken")
+	formatter := user.FormatUser(loggedinUser, token)
 
 	// memanggil response pada helper. passing ke dalam api response
 	response := helper.APIResponse("Successfuly loggedin", http.StatusOK, "success", formatter)

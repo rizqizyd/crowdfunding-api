@@ -1,6 +1,7 @@
 package main
 
 import (
+	"api/auth"
 	"api/handler"
 	"api/user"
 	"log"
@@ -23,6 +24,11 @@ func main() {
 	userRepository := user.NewRepository(db)
 	// akses terhadap user repository
 	userService := user.NewService(userRepository)
+	// memanggil service auth
+	authService := auth.NewService()
+
+	// tes hasil kembalian dari function generate token (manual)
+	// fmt.Println(authService.GenerateToken(1001))
 
 	// save avatar (manual)
 	// userService.SaveAvatar(1, "images/1-profile.png")
@@ -51,8 +57,8 @@ func main() {
 	// 	fmt.Println(userByEmail.Name)
 	// }
 
-	// membuat router
-	userHandler := handler.NewUserHandler(userService)
+	// membuat router. authService yang udah dibuat, kita passing ke dalam userHandler
+	userHandler := handler.NewUserHandler(userService, authService)
 	router := gin.Default()
 	api := router.Group("/api/v1")
 
