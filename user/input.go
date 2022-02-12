@@ -6,3 +6,9 @@ type RegisterUserInput struct {
 	Email      string `json:"email" binding:"required,email"`
 	Password   string `json:"password" binding:"required"`
 }
+
+// input akan diolah oleh handler, dari inputan json user menjadi struct login input, kemudian di passing ke service
+type LoginInput struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}

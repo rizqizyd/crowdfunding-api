@@ -21,7 +21,32 @@ func main() {
 
 	// passing db ke NewRepository pada file repository
 	userRepository := user.NewRepository(db)
+	// akses terhadap user repository
 	userService := user.NewService(userRepository)
+
+	// login user (tes service manual)
+	// input := user.LoginInput{
+	// 	Email:    "masonmount@gmail.com",
+	// 	Password: "1234a5678",
+	// }
+	// user, err := userService.Login(input)
+	// if err != nil {
+	// 	fmt.Println("Terjadi Kesalahan")
+	// 	fmt.Println(err.Error())
+	// }
+	// fmt.Println(user.Email)
+	// fmt.Println(user.Name)
+
+	// menampilkan user by email (manual)
+	// userByEmail, err := userRepository.FindByEmail("masonmount@gmail.com")
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// }
+	// if userByEmail.ID == 0 {
+	// 	fmt.Println("User Tidak Ditemukan")
+	// } else {
+	// 	fmt.Println(userByEmail.Name)
+	// }
 
 	// membuat router
 	userHandler := handler.NewUserHandler(userService)
@@ -29,7 +54,10 @@ func main() {
 	api := router.Group("/api/v1")
 
 	// register handler untuk dapat diakses pada api "/users"
+	// daftarkan endpoint
 	api.POST("/users", userHandler.RegisterUser)
+	api.POST("/sessions", userHandler.Login)
+
 	router.Run()
 
 	// userInput := user.RegisterUserInput{}
