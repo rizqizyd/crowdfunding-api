@@ -104,3 +104,54 @@ func (h *userHandler) Login(c *gin.Context) {
 	response := helper.APIResponse("Successfuly loggedin", http.StatusOK, "success", formatter)
 	c.JSON(http.StatusOK, response)
 }
+
+// cek email API - apakah sudah terdaftar atau belum
+func (h *userHandler) CheckEmailAvaliability(c *gin.Context) {
+	/*
+		Steps:
+		1. cek apakah ada input email dari user
+		2. input email di mapping ke struct input (prosesnya ada di handler. ada berbagai macam validasi)
+		3. struct input di passing ke service
+		4. service akan memanggil repository untuk menentukkan apakah email sudah ada atau belum
+		5. repository melakukan query ke database
+	*/
+
+	// menangkap input yang dimasukkan user
+	var input user.CheckEmailInput
+
+	// proses mapping/binding
+	err := c.ShouldBindJSON(&input)
+	// validasi error
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		// status StatusUnprocessableEntity: 422
+		response := helper.APIResponse("Email checking failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	// memanggil service yang memiliki 2 balikan yaitu boolean dan error
+	isEmailAvailable, err := h.userService.IsEmailAvailable(input)
+	if err != nil {
+		errorMessage := gin.H{"errors": "Server error"}
+		response := helper.APIResponse("Email checking failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	// mengembalikan response
+	data := gin.H{
+		"is_available": isEmailAvailable,
+	}
+
+	// mengecek isEmailAvailable true or false untuk menentukan message yang ada di meta
+	metaMessage := "Email has been registered"
+	if isEmailAvailable {
+		metaMessage = "Email is available"
+	}
+
+	response := helper.APIResponse(metaMessage, http.StatusOK, "success", data)
+	c.JSON(http.StatusOK, response)
+}

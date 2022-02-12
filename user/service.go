@@ -10,6 +10,7 @@ import (
 type Service interface {
 	RegisterUser(input RegisterUserInput) (User, error)
 	Login(input LoginInput) (User, error)
+	IsEmailAvailable(input CheckEmailInput) (bool, error)
 }
 
 // struct service ini harus memenuhi contruct (interface service di atas)
@@ -22,6 +23,7 @@ func NewService(repository Repository) *service {
 	return &service{repository}
 }
 
+// mapping struct input ke struct User
 func (s *service) RegisterUser(input RegisterUserInput) (User, error) {
 	user := User{}
 	user.Name = input.Name
@@ -34,6 +36,7 @@ func (s *service) RegisterUser(input RegisterUserInput) (User, error) {
 	user.PasswordHash = string(passwordHash)
 	user.Role = "user"
 
+	// simpan struct User melalui repository
 	newUser, err := s.repository.Save(user)
 	if err != nil {
 		return newUser, err
@@ -72,5 +75,23 @@ func (s *service) Login(input LoginInput) (User, error) {
 	return user, nil
 }
 
-// mapping struct input ke struct User
-// simpan struct User melalui repository
+// input dari user di mapping ke struct CheckEmailInput
+func (s *service) IsEmailAvailable(input CheckEmailInput) (bool, error) {
+	// ambil nilai email yang ada di dalam struct CheckEmailInput, tampung dalam sebuah variabel "email"
+	email := input.Email
+
+	// masukkan email ke dalam repository
+	// mencari email melalui repository berdasarkan email yang diinput oleh user
+	// jika email user ditemukkan maka akan mengembalikan error
+	user, err := s.repository.FindByEmail(email)
+	if err != nil {
+		return false, err
+	}
+
+	// jika email user tidak ditemukkan di database maka user bisa mendaftar menggunakan email tersebut
+	if user.ID == 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
