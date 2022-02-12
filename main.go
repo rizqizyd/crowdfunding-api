@@ -27,6 +27,18 @@ func main() {
 	// memanggil service auth
 	authService := auth.NewService()
 
+	// tes validate token (manual)
+	// token, err := authService.ValidateToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxfQ.BZcBBLhOhjA9ojwmRNMLx7x0IR83QyTeiH48psbhKLI")
+	// if err != nil {
+	// 	fmt.Println("ERROR")
+	// }
+
+	// if token.Valid {
+	// 	fmt.Println("VALID")
+	// } else {
+	// 	fmt.Println("INVALID")
+	// }
+
 	// tes hasil kembalian dari function generate token (manual)
 	// fmt.Println(authService.GenerateToken(1001))
 
