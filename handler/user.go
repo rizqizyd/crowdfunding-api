@@ -3,6 +3,7 @@ package handler
 import (
 	"api/helper"
 	"api/user"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -153,5 +154,53 @@ func (h *userHandler) CheckEmailAvaliability(c *gin.Context) {
 	}
 
 	response := helper.APIResponse(metaMessage, http.StatusOK, "success", data)
+	c.JSON(http.StatusOK, response)
+}
+
+// function upload avatar
+func (h *userHandler) UploadAvatar(c *gin.Context) {
+	// buat 2 function di repository
+	// repository ambil data user yang ID = x
+	// repository update data user simpan lokasi file
+
+	// menangkap input dari user (parameternya bukan json tapi form body (string))
+	file, err := c.FormFile("avatar")
+	// balikan response
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// simpan gambarnya di folder "images/" + fileName
+	userID := 1 // dapet dari JWT nanti
+	// path := "images/" + file.Filename // nama file tanpa id (bisa konflik dengan user lain yang mengupload nama file sama)
+	path := fmt.Sprintf("images/%d-%s", userID, file.Filename) // nama file dengan id
+
+	err = c.SaveUploadedFile(file, path)
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// di service kita panggil repository
+	// JWT (sementara hardcode, seakan2 user yg login ID = x)
+	_, err = h.userService.SaveAvatar(userID, path)
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	data := gin.H{"is_uploaded": true}
+	response := helper.APIResponse("Avatar successfuly uploaded", http.StatusOK, "success", data)
+
 	c.JSON(http.StatusOK, response)
 }

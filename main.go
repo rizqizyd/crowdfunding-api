@@ -24,6 +24,9 @@ func main() {
 	// akses terhadap user repository
 	userService := user.NewService(userRepository)
 
+	// save avatar (manual)
+	// userService.SaveAvatar(1, "images/1-profile.png")
+
 	// login user (tes service manual)
 	// input := user.LoginInput{
 	// 	Email:    "masonmount@gmail.com",
@@ -58,6 +61,7 @@ func main() {
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvaliability)
+	api.POST("/avatars", userHandler.UploadAvatar)
 
 	router.Run()
 

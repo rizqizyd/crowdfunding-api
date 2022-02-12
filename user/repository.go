@@ -8,6 +8,8 @@ type Repository interface {
 	// contruct
 	Save(user User) (User, error)
 	FindByEmail(email string) (User, error)
+	FindByID(ID int) (User, error)
+	Update(user User) (User, error)
 }
 
 // nilai db disini akan diisi sesuai dengan yang ada pada NewRepository
@@ -23,6 +25,7 @@ func NewRepository(db *gorm.DB) *repository {
 
 // repository menyimpan ke database
 func (r *repository) Save(user User) (User, error) {
+	// menyimpan data baru
 	err := r.db.Create(&user).Error
 	if err != nil {
 		return user, err
@@ -37,6 +40,31 @@ func (r *repository) FindByEmail(email string) (User, error) {
 	var user User
 
 	err := r.db.Where("email = ?", email).Find(&user).Error
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
+}
+
+// function FindByID (mencari user berdasarkan id), mirip dengan FindByEmail
+func (r *repository) FindByID(ID int) (User, error) {
+	// mencari tabel user
+	var user User
+
+	err := r.db.Where("id = ?", ID).Find(&user).Error
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
+}
+
+// function update
+func (r *repository) Update(user User) (User, error) {
+	// melakukan perubahan data dari sebuah struct / data yg sudah ada di database sebelumnya
+	err := r.db.Save(&user).Error
+
 	if err != nil {
 		return user, err
 	}
