@@ -3,9 +3,13 @@ package main
 import (
 	"api/auth"
 	"api/handler"
+	"api/helper"
 	"api/user"
 	"log"
+	"net/http"
+	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -79,7 +83,8 @@ func main() {
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvaliability)
-	api.POST("/avatars", userHandler.UploadAvatar)
+	// jika kita melakukan request ke avatars, kita perlu mengirimkan jwt token sebelum menuju ke userHandler
+	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
 
 	router.Run()
 
@@ -105,4 +110,60 @@ Step API:
 -> service - mapping dari struct input ke struct User
 -> repository - menyimpan struct User ke db
 -> db
+*/
+
+func authMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// ambil nilai header Authorization: Bearer tokentokentoken
+		authHeader := c.GetHeader("Authorization")
+		// apakah di dalam string authHeader terdapat kata Bearer
+		if !strings.Contains(authHeader, "Bearer") {
+			response := helper.APIResponse("Unauthorized 1", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response) // hentikan status jika tidak ada bearer token
+			return
+		}
+		// dari header Authorization, kita ambil nilai tokennya saja
+		// bearer token
+		var tokenString string
+		// tokenString := ""
+		arrayToken := strings.Split(authHeader, " ")
+		if len(arrayToken) == 2 {
+			tokenString = arrayToken[1]
+		}
+		// validasi token
+		token, err := authService.ValidateToken(tokenString)
+		if err != nil {
+			response := helper.APIResponse("Unauthorized 2", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response) // hentikan status jika tidak ada bearer token
+			return
+		}
+		// ambil data yang ada di dalam token
+		claim, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid {
+			response := helper.APIResponse("Unauthorized 3", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response) // hentikan status jika tidak ada bearer token
+			return
+		}
+		// jika berhasil maka ambil userID
+		userID := int(claim["user_id"].(float64))
+		user, err := userService.GetUserByID(userID)
+		// jika user tidak ditemukan
+		if err != nil {
+			response := helper.APIResponse("Unauthorized 4", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response) // hentikan status jika tidak ada bearer token
+			return
+		}
+		// jika tidak ada error yang lain kita set context isinya user yang melakukan request
+		c.Set("currentUser", user) // context-nya sudah di set, dengan key yang namanya "currentUser"
+	}
+}
+
+/*
+Authentication Middleware Steps:
+-> ambil nilai header Authorization: Bearer tokentokentoken
+-> dari header Authorization, kita ambil nilai tokennya saja
+-> kita validasi token
+-> kita ambil user_id
+-> ambil user dari db berdasarkan user_id lewat service
+-> kita set context isinya user
 */

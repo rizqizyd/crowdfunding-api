@@ -194,7 +194,11 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 	}
 
 	// simpan gambarnya di folder "images/" + fileName
-	userID := 1 // dapet dari JWT nanti
+	// userID := 1 // dapet dari JWT nanti
+	// memanggil currentUser | ubah user yang ada di package user .(user.User)
+	currentUser := c.MustGet("currentUser").(user.User)
+	// sekarang user id nya menyesuaikan tergantung user yang login | user yang login dapet dari middleware
+	userID := currentUser.ID
 	// path := "images/" + file.Filename // nama file tanpa id (bisa konflik dengan user lain yang mengupload nama file sama)
 	path := fmt.Sprintf("images/%d-%s", userID, file.Filename) // nama file dengan id
 
