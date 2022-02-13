@@ -2,9 +2,11 @@ package main
 
 import (
 	"api/auth"
+	"api/campaign"
 	"api/handler"
 	"api/helper"
 	"api/user"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -26,6 +28,26 @@ func main() {
 
 	// passing db ke NewRepository pada file repository
 	userRepository := user.NewRepository(db)
+	// buat instance dari campaign repository
+	campaignRepository := campaign.NewRepository(db)
+
+	// panggil semua data campaign dari database (cek manual)
+	// campaigns, err := campaignRepository.FindAll()
+	// panggil data campaign by ID
+	campaigns, err := campaignRepository.FindByUserID(1)
+	fmt.Println("debug")
+	fmt.Println(len(campaigns)) // menampilkan jumlah campaign
+	// tampilkan nama setiap campaign
+	for _, campaign := range campaigns {
+		fmt.Println(campaign.Name)
+		// cek campaign memiliki gambar atau tidak
+		if len(campaign.CampaignImages) > 0 {
+			fmt.Println("jumlah gambar yg di load:", len(campaign.CampaignImages))
+			// akses campaign images
+			fmt.Println(campaign.CampaignImages[0].FileName)
+		}
+	}
+
 	// akses terhadap user repository
 	userService := user.NewService(userRepository)
 	// memanggil service auth
