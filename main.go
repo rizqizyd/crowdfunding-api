@@ -104,6 +104,8 @@ func main() {
 	// membuat router. authService yang udah dibuat, kita passing ke dalam userHandler
 	userHandler := handler.NewUserHandler(userService, authService)
 	router := gin.Default()
+	// set router untuk mengambil gambar user melalui folder images
+	router.Static("/images", "./images")
 	api := router.Group("/api/v1")
 
 	// register handler untuk dapat diakses pada api "/users"

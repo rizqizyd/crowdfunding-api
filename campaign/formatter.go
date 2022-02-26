@@ -8,6 +8,7 @@ type CampaignFormatter struct {
 	ImageURL         string `json:"image_url"`
 	GoalAmount       int    `json:"goal_amount"`
 	CurrentAmount    int    `json:"current_amount"`
+	Slug             string `json:"slug"`
 }
 
 // buat function untuk mengubah yang tadinya object struct campaign yang ada di entity menjadi struct campaign formatter
@@ -23,6 +24,7 @@ func FormatCampaign(campaign Campaign) CampaignFormatter {
 	campaignFormatter.ShortDescription = campaign.ShortDescription
 	campaignFormatter.GoalAmount = campaign.GoalAmount
 	campaignFormatter.CurrentAmount = campaign.CurrentAmount
+	campaignFormatter.Slug = campaign.Slug
 	// setting imageURL jika tidak memiliki gambar atau memiliki gambar
 	campaignFormatter.ImageURL = ""
 	if len(campaign.CampaignImages) > 0 {
