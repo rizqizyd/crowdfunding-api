@@ -43,6 +43,7 @@ func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 		return
 	}
 
-	response := helper.APIResponse("List of campaigns", http.StatusOK, "success", campaigns)
+	// campaigns yang didapatkan kita ubah menjadi array/slice of campaign formatter menggunakkan fungsi FormatCampaigns
+	response := helper.APIResponse("List of campaigns", http.StatusOK, "success", campaign.FormatCampaigns(campaigns))
 	c.JSON(http.StatusOK, response)
 }
