@@ -7,6 +7,7 @@ type Repository interface {
 	// mengembalikan lebih dari 1 data campaign dari database
 	FindAll() ([]Campaign, error)
 	FindByUserID(userID int) ([]Campaign, error)
+	FindByID(ID int) (Campaign, error)
 }
 
 // definisikan struct
@@ -48,3 +49,17 @@ func (r *repository) FindByUserID(userID int) ([]Campaign, error) {
 
 // selanjutnya kita akan membuat instance dari struct repository melalui function NewRepository() yang kita panggil di dalam package main
 // kemudian nanti akan kita tes apakah nilai yang dikembalikan function FindAll() dan FindUserByID sudah benar atau belum
+
+// mengambil campaign berdasarkan id
+func (r *repository) FindByID(ID int) (Campaign, error) {
+	// variabel campaign yang merupakan tipe dari struct campaign
+	var campaign Campaign
+
+	err := r.db.Preload("User").Preload("CampaignImages").Where("id=?", ID).Find(&campaign).Error
+
+	if err != nil {
+		return campaign, err
+	}
+
+	return campaign, nil
+}

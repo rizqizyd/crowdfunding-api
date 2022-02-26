@@ -1,6 +1,9 @@
 package campaign
 
-import "time"
+import (
+	"api/user"
+	"time"
+)
 
 // entitas sesuai dengan tabel campaign pada database
 // buat entity/field relasi (CampaignImages) satu campaign bisa memiliki banyak campaign image
@@ -18,6 +21,7 @@ type Campaign struct {
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	CampaignImages   []CampaignImage
+	User             user.User
 }
 
 type CampaignImage struct {

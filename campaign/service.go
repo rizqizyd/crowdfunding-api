@@ -2,6 +2,7 @@ package campaign
 
 type Service interface {
 	GetCampaigns(userID int) ([]Campaign, error)
+	GetCampaignByID(input GetCampaignDetailInput) (Campaign, error)
 }
 
 // struct repository memiliki denpendency (ketergantungan) field terhadap
@@ -32,4 +33,16 @@ func (s *service) GetCampaigns(userID int) ([]Campaign, error) {
 		return campaigns, err
 	}
 	return campaigns, nil
+}
+
+// service GetCampaignByID untuk mendapatkan data campaign berdasarkan id
+func (s *service) GetCampaignByID(input GetCampaignDetailInput) (Campaign, error) {
+	// memanggil repository
+	campaign, err := s.repository.FindByID(input.ID)
+
+	if err != nil {
+		return campaign, err
+	}
+
+	return campaign, nil
 }
