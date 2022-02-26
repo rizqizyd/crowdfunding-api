@@ -6,7 +6,6 @@ import (
 	"api/handler"
 	"api/helper"
 	"api/user"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -53,8 +52,9 @@ func main() {
 
 	// menampilkan data campaign
 	campaignService := campaign.NewService(campaignRepository)
-	campaigns, _ := campaignService.GetCampaigns(0)
-	fmt.Println(len(campaigns))
+	// campaigns, _ := campaignService.GetCampaigns(0)
+	// fmt.Println(len(campaigns))
+	campaignHandler := handler.NewCampaignHandler(campaignService)
 
 	// memanggil service auth
 	authService := auth.NewService()
@@ -113,6 +113,7 @@ func main() {
 	api.POST("/email_checkers", userHandler.CheckEmailAvaliability)
 	// jika kita melakukan request ke avatars, kita perlu mengirimkan jwt token sebelum menuju ke userHandler
 	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
+	api.GET("/campaigns", campaignHandler.GetCampaigns)
 
 	router.Run()
 

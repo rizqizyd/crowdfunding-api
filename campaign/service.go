@@ -15,6 +15,7 @@ func NewService(repository Repository) *service {
 }
 
 // implementasi dari contruct GetCampaigns
+// service GetCampaigns ini nantinya akan dipanggil oleh handler campaign.go yang data userID nya di dapatkan melalui query parameter "user_id"
 func (s *service) GetCampaigns(userID int) ([]Campaign, error) {
 	// jika userID != 0, maka kita hanya mengambil data campaign berdasarkan id yang bersangkutan
 	if userID != 0 {
