@@ -5,6 +5,7 @@ import (
 	"api/campaign"
 	"api/handler"
 	"api/helper"
+	"api/transaction"
 	"api/user"
 	"log"
 	"net/http"
@@ -29,6 +30,8 @@ func main() {
 	userRepository := user.NewRepository(db)
 	// buat instance dari campaign repository
 	campaignRepository := campaign.NewRepository(db)
+	// instansiasi transaction repository untuk bisa passing db
+	transactionRepository := transaction.NewRepository(db)
 
 	// panggil semua data campaign dari database (cek manual)
 	// campaigns, err := campaignRepository.FindAll()
@@ -54,10 +57,15 @@ func main() {
 	campaignService := campaign.NewService(campaignRepository)
 	// campaigns, _ := campaignService.GetCampaigns(0)
 	// fmt.Println(len(campaigns))
-	campaignHandler := handler.NewCampaignHandler(campaignService)
 
 	// memanggil service auth
 	authService := auth.NewService()
+	// memanggil transaction service
+	transactionService := transaction.NewService(transactionRepository, campaignRepository)
+
+	// handler
+	campaignHandler := handler.NewCampaignHandler(campaignService)
+	transactionHandler := handler.NewTransactionHandler(transactionService)
 
 	// panggil service function CreateCampaign untuk tes (manual)
 	// input := campaign.CreateCampaignInput{}
@@ -139,6 +147,7 @@ func main() {
 
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.GET("/campaign/:id", campaignHandler.GetCampaign)
+	api.GET("/campaign/:id/transactions", authMiddleware(authService, userService), transactionHandler.GetCampaignTransactions)
 
 	// update campaign
 	api.PUT("/campaigns/:id", authMiddleware(authService, userService), campaignHandler.UpdateCampaign)
