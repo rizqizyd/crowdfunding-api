@@ -20,3 +20,10 @@ type CreateCampaignInput struct {
 	User user.User
 	// isi field User ini dengan mengambil data user yang ada di Context yang sebelumnya sudah di set lewat middleware
 }
+
+// data yang dipakai untuk menangkap inputan dari user
+type CreateCampaignImageInput struct {
+	CampaignID int  `form:"campaign_id" binding:"required"`
+	IsPrimary  bool `form:"is_primary"`
+	User       user.User
+}

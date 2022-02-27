@@ -10,6 +10,8 @@ type Repository interface {
 	FindByID(ID int) (Campaign, error)
 	Save(campaign Campaign) (Campaign, error)
 	Update(campaign Campaign) (Campaign, error)
+	CreateImage(campaignImage CampaignImage) (CampaignImage, error)
+	MarkAllImagesAsNonPrimary(campaignID int) (bool, error)
 }
 
 // definisikan struct
@@ -85,4 +87,29 @@ func (r *repository) Update(campaign Campaign) (Campaign, error) {
 	}
 
 	return campaign, nil
+}
+
+// function create image
+func (r *repository) CreateImage(campaignImage CampaignImage) (CampaignImage, error) {
+	// kita manfaatkan function Create() yang dimiliki oleh gorm db
+	// kemudian kita passing pointer dari struct yang ingin kita simpan yaitu campaignImage
+	err := r.db.Create(&campaignImage).Error
+	if err != nil {
+		return campaignImage, err
+	}
+
+	return campaignImage, nil
+}
+
+// function mark all images as non primary
+func (r *repository) MarkAllImagesAsNonPrimary(campaignID int) (bool, error) {
+	// UPDATE campaign_images SET is_primary = false WHERE campaign_id = 1
+	// dalam gorm seperti ini
+	err := r.db.Model(&CampaignImage{}).Where("campaign_id = ?", campaignID).Update("is_primary", false).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

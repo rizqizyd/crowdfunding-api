@@ -4,6 +4,7 @@ import (
 	"api/campaign"
 	"api/helper"
 	"api/user"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -173,5 +174,75 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 
 	// jika tidak ada error, kita balikan sebuah data JSON ke client
 	response := helper.APIResponse("Success to update campaign", http.StatusOK, "success", campaign.FormatCampaign(updatedCampaign))
+	c.JSON(http.StatusOK, response)
+}
+
+/*
+Analisis langkah-langkah upload campaign image:
+-> handler menangkap input, ubah ke struct input, dan save image campaign ke folder tertentu
+-> service (kondisi memanggil point 2 di repository, panggil repo point 1)
+-> repository
+	- create image/save data image ke dalam tabel campaign_images
+	- ubah gambar lama yang is_primary-nya true ke false
+*/
+
+func (h *campaignHandler) UploadImage(c *gin.Context) {
+	var input campaign.CreateCampaignImageInput
+
+	err := c.ShouldBind(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Failed to upload campaign image", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	// dapatkan data currentUser
+	currentUser := c.MustGet("currentUser").(user.User)
+	input.User = currentUser
+	// input akan di passing ke dalam SaveCampaignImage
+
+	// menangkap input dari user (parameternya bukan json tapi form body (string))
+	file, err := c.FormFile("file")
+	// balikan response
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Failed to upload campaign image", http.StatusBadRequest, "error", data)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// currentUser := c.MustGet("currentUser").(user.User)
+	// sekarang user id nya menyesuaikan tergantung user yang login | user yang login dapet dari middleware
+	userID := currentUser.ID
+	// path := "images/" + file.Filename // nama file tanpa id (bisa konflik dengan user lain yang mengupload nama file sama)
+	path := fmt.Sprintf("images/%d-%s", userID, file.Filename) // nama file dengan id
+
+	err = c.SaveUploadedFile(file, path)
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Failed to upload campaign image", http.StatusBadRequest, "error", data)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// di service kita panggil repository
+	// JWT (sementara hardcode, seakan2 user yg login ID = x)
+	_, err = h.service.SaveCampaignImage(input, path)
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.APIResponse("Failed to upload campaign image", http.StatusBadRequest, "error", data)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	data := gin.H{"is_uploaded": true}
+	response := helper.APIResponse("Campaign image successfuly uploaded", http.StatusOK, "success", data)
+
 	c.JSON(http.StatusOK, response)
 }

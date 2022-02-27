@@ -15,6 +15,8 @@ type Service interface {
 	// parameter yang digunakan untuk Update campaign adalah struct pada input.go
 	// parameter inputID merupakan tipe dari GetCampaignDetailInput, dst.
 	UpdateCampaign(inputID GetCampaignDetailInput, inputData CreateCampaignInput) (Campaign, error)
+
+	SaveCampaignImage(input CreateCampaignImageInput, fileLocation string) (CampaignImage, error)
 }
 
 // struct repository memiliki denpendency (ketergantungan) field terhadap
@@ -117,4 +119,44 @@ func (s *service) UpdateCampaign(inputID GetCampaignDetailInput, inputData Creat
 	}
 
 	return updatedCampaign, nil
+}
+
+// implementasi SaveCampaignImage
+func (s *service) SaveCampaignImage(input CreateCampaignImageInput, fileLocation string) (CampaignImage, error) {
+	// ambil data campaign berdasarkan id
+	campaign, err := s.repository.FindByID(input.CampaignID)
+	if err != nil {
+		return CampaignImage{}, err
+	}
+
+	// jika yang melakukan request bukan user yang bikin campaign, maka dia tidak bisa upload
+	if campaign.UserID != input.User.ID {
+		return CampaignImage{}, errors.New("Not an owner of the campaign")
+	}
+
+	isPrimary := 0
+	// cek apakah perlu mengubah is_primary jadi false atau tidak
+	if input.IsPrimary {
+		isPrimary = 1
+		// jika primary true diubah menjadi false
+		_, err := s.repository.MarkAllImagesAsNonPrimary(input.CampaignID)
+		if err != nil {
+			return CampaignImage{}, err
+		}
+	}
+
+	// save campaign image baru
+	campaignImage := CampaignImage{}
+	// proses mapping
+	campaignImage.CampaignID = input.CampaignID
+	campaignImage.IsPrimary = isPrimary
+	campaignImage.FileName = fileLocation
+
+	// panggil repository
+	newCampaignImage, err := s.repository.CreateImage(campaignImage)
+	if err != nil {
+		return newCampaignImage, err
+	}
+
+	return newCampaignImage, nil
 }
