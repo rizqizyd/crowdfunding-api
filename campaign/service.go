@@ -1,6 +1,7 @@
 package campaign
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gosimple/slug"
@@ -10,6 +11,10 @@ type Service interface {
 	GetCampaigns(userID int) ([]Campaign, error)
 	GetCampaignByID(input GetCampaignDetailInput) (Campaign, error)
 	CreateCampaign(input CreateCampaignInput) (Campaign, error)
+
+	// parameter yang digunakan untuk Update campaign adalah struct pada input.go
+	// parameter inputID merupakan tipe dari GetCampaignDetailInput, dst.
+	UpdateCampaign(inputID GetCampaignDetailInput, inputData CreateCampaignInput) (Campaign, error)
 }
 
 // struct repository memiliki denpendency (ketergantungan) field terhadap
@@ -81,4 +86,35 @@ func (s *service) CreateCampaign(input CreateCampaignInput) (Campaign, error) {
 	}
 
 	return newCampaign, nil
+}
+
+// implementasi dari contruct Update
+func (s *service) UpdateCampaign(inputID GetCampaignDetailInput, inputData CreateCampaignInput) (Campaign, error) {
+	// ambil data campaign berdasarkan id (nilai yang masih lama)
+	campaign, err := s.repository.FindByID(inputID.ID)
+	if err != nil {
+		return campaign, err
+	}
+
+	// passing current user dilakukan supaya kita bisa cek bahwa user yang melakukan update adalah user yang memiliki campaign tersebut
+	// jika user yang melakukan request bukan user yang memiliki data maka kita kembalikan error
+	if campaign.UserID != inputData.User.ID {
+		return campaign, errors.New("Not an owner of the campaign")
+	}
+
+	// tangkap parameternya kemudian mapping ke object campaign yang ingin di update
+	// nilai data baru
+	campaign.Name = inputData.Name
+	campaign.ShortDescription = inputData.ShortDescription
+	campaign.Description = inputData.Description
+	campaign.Perks = inputData.Perks
+	campaign.GoalAmount = inputData.GoalAmount
+
+	// simpan ke dalam database menggunakan repository yang telah dibuat
+	updatedCampaign, err := s.repository.Update(campaign)
+	if err != nil {
+		return updatedCampaign, err
+	}
+
+	return updatedCampaign, nil
 }

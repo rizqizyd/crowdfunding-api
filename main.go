@@ -139,6 +139,9 @@ func main() {
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.GET("/campaign/:id", campaignHandler.GetCampaign)
 
+	// update campaign
+	api.PUT("/campaigns/:id", authMiddleware(authService, userService), campaignHandler.UpdateCampaign)
+
 	router.Run()
 
 	// userInput := user.RegisterUserInput{}

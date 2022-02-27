@@ -82,7 +82,7 @@ func (h *campaignHandler) GetCampaign(c *gin.Context) {
 }
 
 /*
-Analisis langkah-langkah create campaign
+Analisis langkah-langkah create campaign:
 -> tangkap parameter dari user ke input struct
 -> ambil current user dari jwt/handler (untuk mengetahui user pembuat campaign)
 -> panggil service, parameternya adalah input struct yang telah di mapping
@@ -119,6 +119,59 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 		return
 	}
 
-	response := helper.APIResponse("Success to create campaign", http.StatusOK, "success", campaign.FormatCampaign((newCampaign)))
+	response := helper.APIResponse("Success to create campaign", http.StatusOK, "success", campaign.FormatCampaign(newCampaign))
+	c.JSON(http.StatusOK, response)
+}
+
+/*
+Analisis langkah-langkah update campaign:
+-> user memasukkan input lalu dikirim ke handler
+-> handler menangkap input
+-> mapping dari input ke input struct (input form dan input uri)
+-> input dari user, dan input yang ada di uri (passing ke service)
+-> service (find campaign by id, tangkap parameter dari inputan yang sudah dalam bentuk struct) (tulis logika untuk update)
+-> repository update data campaign (panggil repository untuk menyimpan perubahan data)
+*/
+
+func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
+	// tangkap id dari campaign yang ingin di update
+	var inputID campaign.GetCampaignDetailInput
+
+	err := c.ShouldBindUri(&inputID)
+	if err != nil {
+		response := helper.APIResponse("Failed to update campaign", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// tangkap dan mapping ke dalam struct parameter yang dikirim user melalui form
+	var inputData campaign.CreateCampaignInput
+
+	// lakukan pengecekan apakah ada error saat melakukan ShouldBindJSON
+	err = c.ShouldBindJSON(&inputData)
+	if err != nil {
+		// menangani validasi error, membuat array dan menambah data array (error) melalui perulangan
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Failed to update campaign", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	// dapatkan data currentUser
+	currentUser := c.MustGet("currentUser").(user.User)
+	inputData.User = currentUser
+
+	// jika semua data telah ditangkap, kita panggil service nya
+	updatedCampaign, err := h.service.UpdateCampaign(inputID, inputData)
+	if err != nil {
+		response := helper.APIResponse("Failed to update campaign", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// jika tidak ada error, kita balikan sebuah data JSON ke client
+	response := helper.APIResponse("Success to update campaign", http.StatusOK, "success", campaign.FormatCampaign(updatedCampaign))
 	c.JSON(http.StatusOK, response)
 }
