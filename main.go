@@ -59,6 +59,24 @@ func main() {
 	// memanggil service auth
 	authService := auth.NewService()
 
+	// panggil service function CreateCampaign untuk tes (manual)
+	// input := campaign.CreateCampaignInput{}
+	// input.Name = "Penggalangan Dana Startup"
+	// input.ShortDescription = "short"
+	// input.Description = "long description"
+	// input.GoalAmount = 1000000000
+	// input.Perks = "hadiah satu, dua, dan tiga"
+
+	// // menggunakan user 1
+	// inputUser, _ := userService.GetUserByID(3)
+	// input.User = inputUser
+
+	// // panggil CreateCampaign
+	// _, err = campaignService.CreateCampaign(input)
+	// if err != nil {
+	// 	log.Fatal(err.Error())
+	// }
+
 	// tes validate token (manual)
 	// token, err := authService.ValidateToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxfQ.BZcBBLhOhjA9ojwmRNMLx7x0IR83QyTeiH48psbhKLI")
 	// if err != nil {
@@ -115,6 +133,8 @@ func main() {
 	api.POST("/email_checkers", userHandler.CheckEmailAvaliability)
 	// jika kita melakukan request ke avatars, kita perlu mengirimkan jwt token sebelum menuju ke userHandler
 	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
+	// create new campaign
+	api.POST("/campaigns", authMiddleware(authService, userService), campaignHandler.CreateCampaign)
 
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.GET("/campaign/:id", campaignHandler.GetCampaign)
