@@ -227,3 +227,15 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+// function FetchUser untuk mendapatkan data user yang sedang login (balikan json-nya sama seperti saat user login dan register)
+func (h *userHandler) FetchUser(c *gin.Context) {
+	// mendapatkan user yang sedang login
+	currentUser := c.MustGet("currentUser").(user.User)
+	// format user, karena di dalam handler tidak memanggil generate token, maka token-nya di kosongkan (tidak dibutuhkan juga)
+	// token hanya dibutuhkan ketika login atau registrasi
+	formatter := user.FormatUser(currentUser, "")
+	// response
+	response := helper.APIResponse("Successfuly fetch user data", http.StatusOK, "success", formatter)
+	c.JSON(http.StatusOK, response)
+}
