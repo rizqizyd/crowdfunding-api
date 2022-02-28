@@ -5,6 +5,7 @@ import (
 	"api/campaign"
 	"api/handler"
 	"api/helper"
+	"api/payment"
 	"api/transaction"
 	"api/user"
 	"log"
@@ -60,12 +61,23 @@ func main() {
 
 	// memanggil service auth
 	authService := auth.NewService()
+	// payment service
+	paymentService := payment.NewService()
 	// memanggil transaction service
-	transactionService := transaction.NewService(transactionRepository, campaignRepository)
+	transactionService := transaction.NewService(transactionRepository, campaignRepository, paymentService)
 
 	// handler
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
+
+	// tes transactionService (manual)
+	// user, _ := userService.GetUserByID(1)
+	// input := transaction.CreateTransactionInput{
+	// 	CampaignID: 6,
+	// 	Amount:     3000000,
+	// 	User:       user,
+	// }
+	// transactionService.CreateTransaction(input)
 
 	// panggil service function CreateCampaign untuk tes (manual)
 	// input := campaign.CreateCampaignInput{}
@@ -144,6 +156,7 @@ func main() {
 	// create new campaign
 	api.POST("/campaigns", authMiddleware(authService, userService), campaignHandler.CreateCampaign)
 	api.POST("/campaign-images", authMiddleware(authService, userService), campaignHandler.UploadImage)
+	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransaction)
 
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.GET("/campaign/:id", campaignHandler.GetCampaign)

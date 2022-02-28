@@ -10,6 +10,8 @@ type repository struct {
 type Repository interface {
 	GetByCampaignID(campaignID int) ([]Transaction, error)
 	GetByUserID(userID int) ([]Transaction, error)
+	Save(transaction Transaction) (Transaction, error)
+	Update(transaction Transaction) (Transaction, error)
 }
 
 // untuk instansiasi NewRepository pada main.go
@@ -43,4 +45,24 @@ func (r *repository) GetByUserID(userID int) ([]Transaction, error) {
 	}
 
 	return transactions, nil
+}
+
+// function Save (create new transaction)
+func (s *repository) Save(transaction Transaction) (Transaction, error) {
+	err := s.db.Create(&transaction).Error
+	if err != nil {
+		return transaction, err
+	}
+
+	return transaction, nil
+}
+
+// function Update
+func (s *repository) Update(transaction Transaction) (Transaction, error) {
+	err := s.db.Save(&transaction).Error
+	if err != nil {
+		return transaction, err
+	}
+
+	return transaction, nil
 }
