@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -67,6 +68,8 @@ func main() {
 	transactionService := transaction.NewService(transactionRepository, campaignRepository, paymentService)
 
 	// handler
+	// membuat router. authService yang udah dibuat, kita passing ke dalam userHandler
+	userHandler := handler.NewUserHandler(userService, authService)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 
@@ -139,9 +142,9 @@ func main() {
 	// 	fmt.Println(userByEmail.Name)
 	// }
 
-	// membuat router. authService yang udah dibuat, kita passing ke dalam userHandler
-	userHandler := handler.NewUserHandler(userService, authService)
 	router := gin.Default()
+	// CORS (allow cors)
+	router.Use(cors.Default())
 	// set router untuk mengambil gambar user melalui folder images
 	router.Static("/images", "./images")
 	api := router.Group("/api/v1")
