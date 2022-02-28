@@ -154,6 +154,6 @@ func (s *service) ProcessPayment(input TransactionNotificationInput) error {
 		}
 	}
 
-	// jika semua berjalan lancar dan tidak ada error
+	// jika semua berjalan lancar dan tidak ada error maka kembalikan nil
 	return nil
 }
