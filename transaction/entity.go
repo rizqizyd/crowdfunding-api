@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"api/campaign"
 	"api/user"
 	"time"
 )
@@ -16,4 +17,7 @@ type Transaction struct {
 	User       user.User
 	CreatedAt  time.Time
 	updatedAt  time.Time
+
+	// supaya transaction punya relasi dengan campaign lewat kolom campaign id
+	Campaign campaign.Campaign
 }

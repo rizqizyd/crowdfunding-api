@@ -58,3 +58,28 @@ Analisis campaign transaction:
 -> repository mencari data transaction suatu campaign
 -> kembali ke handler untuk melakukkan formatting menggunakkan formatter
 */
+
+// Analisis user transaction:
+// GetUserTransactions
+// handler
+// ambil nilai user dari jwt/middleware
+// service
+// repository -> ambil data transactions (preload campaign)
+
+func (h *transactionHandler) GetUserTransactions(c *gin.Context) {
+	// ambil data user yang melakukan request
+	// ubah ke tipe (user.User)
+	currentUser := c.MustGet("currentUser").(user.User)
+	userID := currentUser.ID
+
+	// panggil service
+	transactions, err := h.service.GetTransactionsByUserID(userID)
+	if err != nil {
+		response := helper.APIResponse("Failed to get list of backer transactions", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := helper.APIResponse("List of backer transactions", http.StatusOK, "success", transaction.FormatUserTransactions(transactions))
+	c.JSON(http.StatusOK, response)
+}

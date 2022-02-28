@@ -16,6 +16,7 @@ type service struct {
 // parameter GetCampaignTransactionsInput didapatkan dari struct pada input.go
 type Service interface {
 	GetTransactionsByCampaignID(input GetCampaignTransactionsInput) ([]Transaction, error)
+	GetTransactionsByUserID(userID int) ([]Transaction, error)
 }
 
 // untuk instansiasi NewRepository pada repository.go
@@ -44,4 +45,15 @@ func (s *service) GetTransactionsByCampaignID(input GetCampaignTransactionsInput
 	}
 
 	return transaction, nil
+}
+
+// function GetTransactionsByUserID
+func (s *service) GetTransactionsByUserID(userID int) ([]Transaction, error) {
+	// panggil repository
+	transactions, err := s.repository.GetByUserID(userID)
+	if err != nil {
+		return transactions, err
+	}
+
+	return transactions, nil
 }
