@@ -157,6 +157,7 @@ func main() {
 	api.POST("/campaigns", authMiddleware(authService, userService), campaignHandler.CreateCampaign)
 	api.POST("/campaign-images", authMiddleware(authService, userService), campaignHandler.UploadImage)
 	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransaction)
+	api.POST("/transactions/notification", transactionHandler.GetNotification)
 
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.GET("/campaign/:id", campaignHandler.GetCampaign)

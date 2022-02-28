@@ -4,6 +4,7 @@ import (
 	"api/campaign"
 	"api/payment"
 	"errors"
+	"strconv"
 )
 
 type service struct {
@@ -21,6 +22,7 @@ type Service interface {
 	GetTransactionsByCampaignID(input GetCampaignTransactionsInput) ([]Transaction, error)
 	GetTransactionsByUserID(userID int) ([]Transaction, error)
 	CreateTransaction(input CreateTransactionInput) (Transaction, error)
+	ProcessPayment(input TransactionNotificationInput) error
 }
 
 // untuk instansiasi NewRepository pada repository.go
@@ -104,4 +106,54 @@ func (s *service) CreateTransaction(input CreateTransactionInput) (Transaction, 
 	}
 
 	return newTransaction, nil
+}
+
+// implementasi function ProcessPayment
+func (s *service) ProcessPayment(input TransactionNotificationInput) error {
+	// transaction_id digunakan untuk mengambil data transaction dengan id yang bersangkutan
+	// ubah dari string ke integer
+	transaction_id, _ := strconv.Atoi(input.OrderID)
+
+	// mendapatkan transaction, id nya didapatkan dari inputan yang dikirim oleh midtrans
+	transaction, err := s.repository.GetByID(transaction_id)
+	if err != nil {
+		return err
+	}
+
+	// update status transaksi pada database. kondisinya dikirim dari notifikasi midtrans
+	if input.PaymentType == "credit_card" && input.TransactionStatus == "capture" && input.FraudStatus == "accept" {
+		transaction.Status = "paid"
+	} else if input.TransactionStatus == "settlement" {
+		transaction.Status = "paid"
+	} else if input.TransactionStatus == "deny" || input.TransactionStatus == "expire" || input.TransactionStatus == "cancel" {
+		transaction.Status = "cancelled"
+	}
+
+	// update data transaksi
+	updatedTransaction, err := s.repository.Update(transaction)
+	if err != nil {
+		return err
+	}
+
+	// Update data campaign
+	// ambil data campaign
+	campaign, err := s.campaignRepository.FindByID(updatedTransaction.CampaignID)
+	if err != nil {
+		return err
+	}
+
+	// jika ada transaksi yang berubah jadi paid, perlu kita update data backer count nya
+	if updatedTransaction.Status == "paid" {
+		campaign.BackerCount = campaign.BackerCount + 1
+		campaign.CurrentAmount = campaign.CurrentAmount + updatedTransaction.Amount
+
+		// panggil repository campaign, passing data campaign
+		_, err := s.campaignRepository.Update(campaign)
+		if err != nil {
+			return err
+		}
+	}
+
+	// jika semua berjalan lancar dan tidak ada error
+	return nil
 }
